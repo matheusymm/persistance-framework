@@ -20,6 +20,7 @@ import com.persistence.utils.ColumnHelper;
 public class SchemaGenerator {
     private static final Map<Class<?>, String> JAVA_TO_SQL_TYPE_MAP = new HashMap<>();
     private final ColumnHelper columnHelper;
+    private DbConnection dbConnection;
 
     static {
         JAVA_TO_SQL_TYPE_MAP.put(String.class, "VARCHAR(255)");
@@ -40,20 +41,20 @@ public class SchemaGenerator {
 
     public SchemaGenerator() {
         this.columnHelper = new ColumnHelper();
+        this.dbConnection = DbConnection.getDbConnection();
     }
 
     public void generateSchema(Class<?>... entityClasses) throws SQLException {
         Connection conn = null;
         Statement stmt = null;
         try {
-            conn = DbConnection.getDbConnection();
+            conn = dbConnection.getConnection();
             stmt = conn.createStatement();
             for (Class<?> entityClass : entityClasses) {
                 if (entityClass.isAnnotationPresent(Entity.class)) {
-                    String createTableSql = buildCreateTableSql(entityClass);
-                    System.out.println("Executing SQL: " + createTableSql);
-                    stmt.execute(createTableSql);
-                    System.out.println("Table created/verified for entity: " + entityClass.getSimpleName());
+                    String sql = createTableSql(entityClass);
+                    stmt.execute(sql);
+                    System.out.println("Generating schema for table: " + entityClass.getSimpleName());
                 } else {
                     System.err.println("Warning: Class " + entityClass.getName()
                             + " is not an @Entity and will be skipped for schema generation.");
@@ -63,11 +64,10 @@ public class SchemaGenerator {
             if (stmt != null) {
                 stmt.close();
             }
-            DbConnection.closeConnection();
         }
     }
 
-    private String buildCreateTableSql(Class<?> entityClass) {
+    private String createTableSql(Class<?> entityClass) {
         Entity entityAnnotation = entityClass.getAnnotation(Entity.class);
         String tableName = entityAnnotation.name();
 
@@ -91,6 +91,9 @@ public class SchemaGenerator {
                 }
                 if (columnAnnotation.unique()) {
                     sqlBuilder.append(" UNIQUE");
+                }
+                if (columnAnnotation.primaryKey()) {
+                    sqlBuilder.append(" PRIMARY KEY");
                 }
             }
             sqlBuilder.append(", ");

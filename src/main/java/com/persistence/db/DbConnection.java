@@ -19,14 +19,21 @@ public class DbConnection {
         }
     }
 
-    public static Connection getDbConnection() {
+    public static DbConnection getDbConnection() {
         if (instance == null) {
             instance = new DbConnection();
         }
-        return instance.connection;
+        return instance;
     }
 
-    public static synchronized void closeConnection() {
+    public Connection getConnection() {
+        if (connection == null) {
+            throw new IllegalStateException("Database connection is not initialized.");
+        }
+        return connection;
+    }
+
+    public static synchronized void closeDbConnection() {
         if (instance == null || instance.connection == null) {
             return;
         }
@@ -37,6 +44,7 @@ public class DbConnection {
             throw new RuntimeException("Error closing the database connection", e);
         } finally {
             instance = null;
+            System.out.println("Database connection closed.");
         }
     }
 }

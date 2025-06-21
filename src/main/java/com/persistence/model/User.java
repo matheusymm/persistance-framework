@@ -6,21 +6,21 @@ import com.persistence.annotation.Entity;
 @Entity(name = "users")
 public class User {
 
-    @Column(name = "id", nullable = false, unique = true)
+    @Column(name = "id", nullable = false, unique = true, primaryKey = true)
     private int id;
 
-    @Column(name = "username", nullable = false, unique = true)
-    private String username;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     public User() {
     }
 
-    public User(int id, String username, String email) {
+    public User(int id, String name, String email) {
         this.id = id;
-        this.username = username;
+        this.name = name;
         this.email = email;
     }
 
@@ -32,12 +32,12 @@ public class User {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -52,7 +52,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", username='" + username + '\'' +
+                ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 '}';
     }
