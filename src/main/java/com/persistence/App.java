@@ -1,8 +1,5 @@
 package com.persistence;
 
-import java.lang.reflect.InvocationTargetException;
-import java.sql.SQLException;
-
 import com.persistence.model.User;
 
 public class App {
@@ -24,9 +21,7 @@ public class App {
 
             persistenceFramework.delete(u2);
             System.out.println("Deleted user 2. Remaining users: " + persistenceFramework.findAll());
-        } catch (IllegalAccessException | SQLException | SecurityException | NoSuchFieldException
-                | InstantiationException | NoSuchMethodException | IllegalArgumentException
-                | InvocationTargetException e) {
+        } catch (SecurityException | IllegalArgumentException e) {
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
         } finally {

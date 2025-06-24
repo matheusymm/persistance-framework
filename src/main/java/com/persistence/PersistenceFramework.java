@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 import com.persistence.annotation.Entity;
 import com.persistence.db.DbConnection;
@@ -39,18 +40,13 @@ public class PersistenceFramework {
     }
 
     public void initializeSchema() {
-        try {
-            if (!entityClass.isAnnotationPresent(Entity.class)) {
-                throw new IllegalArgumentException("Provided class is not an entity: " + tableName);
-            }
-            schemaGenerator.generateSchema(entityClass);
-        } catch (SQLException e) {
-            System.err.println("Error generating schema for " + tableName + ": " + e.getMessage());
-            e.printStackTrace();
+        if (!entityClass.isAnnotationPresent(Entity.class)) {
+            throw new IllegalArgumentException("Provided class is not an entity: " + tableName);
         }
+        schemaGenerator.generateSchema(entityClass);
     }
 
-    public void insert(Object object) throws IllegalAccessException, SQLException {
+    public void insert(Object object) {
         Connection conn = null;
         PreparedStatement pStmt = null;
         try {
@@ -80,15 +76,20 @@ public class PersistenceFramework {
             }
 
             pStmt.executeUpdate();
+        } catch (IllegalAccessException | SQLException e) {
+            System.err.println("Error inserting object into " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            if (pStmt != null)
-                pStmt.close();
+            try {
+                if (pStmt != null)
+                    pStmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing PreparedStatement: " + e.getMessage());
+            }
         }
     }
 
-    public Object findById(Object id)
-            throws SQLException, IllegalAccessException, InstantiationException, NoSuchFieldException,
-            NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
+    public Object findById(Object id) {
         Connection conn = null;
         PreparedStatement pStmt = null;
         ResultSet resultSet = null;
@@ -116,16 +117,24 @@ public class PersistenceFramework {
                 System.out.println("No record found with id: " + id);
                 return null;
             }
+        } catch (SQLException | IllegalAccessException | InstantiationException | NoSuchMethodException
+                | SecurityException | IllegalArgumentException | InvocationTargetException e) {
+            System.err.println("Error finding object by ID in " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
         } finally {
-            if (resultSet != null)
-                resultSet.close();
-            if (pStmt != null)
-                pStmt.close();
+            try {
+                if (resultSet != null)
+                    resultSet.close();
+                if (pStmt != null)
+                    pStmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing PreparedStatement or ResultSet: " + e.getMessage());
+            }
         }
     }
 
-    public List<Object> findAll() throws SQLException, IllegalAccessException, InstantiationException,
-            NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
+    public List<Object> findAll() {
         Connection conn = null;
         PreparedStatement pStmt = null;
         ResultSet resultSet = null;
@@ -148,16 +157,24 @@ public class PersistenceFramework {
                 entities.add(entityInstance);
             }
             return entities;
+        } catch (SQLException | IllegalAccessException | InstantiationException | NoSuchMethodException
+                | SecurityException | IllegalArgumentException | InvocationTargetException e) {
+            System.err.println("Error finding all objects in " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
+            return Collections.emptyList();
         } finally {
-            if (resultSet != null)
-                resultSet.close();
-            if (pStmt != null)
-                pStmt.close();
+            try {
+                if (resultSet != null)
+                    resultSet.close();
+                if (pStmt != null)
+                    pStmt.close();
+            } catch (SQLException e) {
+                System.err.println("Error closing PreparedStatement or ResultSet: " + e.getMessage());
+            }
         }
     }
 
-    public void update(Object object)
-            throws IllegalAccessException, SQLException, NoSuchFieldException, SecurityException {
+    public void update(Object object) {
         Connection conn = null;
         PreparedStatement pStmt = null;
         try {
@@ -189,14 +206,21 @@ public class PersistenceFramework {
                 pStmt.setObject(paramIndex++, field.get(object));
             }
             pStmt.setObject(paramIndex, pkField.get(object));
+        } catch (IllegalAccessException | SQLException | SecurityException e) {
+            System.err.println("Error updating object in " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            if (pStmt != null)
-                pStmt.close();
+            try {
+                if (pStmt != null)
+                    pStmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error executing update statement: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 
-    public void delete(Object object)
-            throws IllegalAccessException, SQLException, NoSuchFieldException, SecurityException {
+    public void delete(Object object) {
         Connection conn = null;
         PreparedStatement pStmt = null;
         try {
@@ -214,9 +238,17 @@ public class PersistenceFramework {
             String sql = "DELETE FROM " + tableName + " WHERE " + pkColumn + " = ?";
             pStmt = conn.prepareStatement(sql);
             pStmt.setObject(1, pkValue);
+        } catch (IllegalAccessException | SQLException | SecurityException e) {
+            System.err.println("Error deleting object from " + tableName + ": " + e.getMessage());
+            e.printStackTrace();
         } finally {
-            if (pStmt != null)
-                pStmt.close();
+            try {
+                if (pStmt != null)
+                    pStmt.executeUpdate();
+            } catch (SQLException e) {
+                System.err.println("Error executing delete statement: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 

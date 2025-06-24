@@ -44,9 +44,10 @@ public class SchemaGenerator {
         this.dbConnection = DbConnection.getDbConnection();
     }
 
-    public void generateSchema(Class<?>... entityClasses) throws SQLException {
+    public void generateSchema(Class<?>... entityClasses) {
         Connection conn = null;
         Statement stmt = null;
+
         try {
             conn = dbConnection.getConnection();
             stmt = conn.createStatement();
@@ -60,9 +61,17 @@ public class SchemaGenerator {
                             + " is not an @Entity and will be skipped for schema generation.");
                 }
             }
+        } catch (SQLException e) {
+            System.err.println("Error generating schema: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             if (stmt != null) {
-                stmt.close();
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    System.err.println("Error closing statement: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }
