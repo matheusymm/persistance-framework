@@ -11,7 +11,9 @@ public class ColumnHelper {
     public String getColumnName(Field field) {
         if (field.isAnnotationPresent(Column.class)) {
             Column columnAnnotation = field.getAnnotation(Column.class);
-            return columnAnnotation.name();
+            if (!columnAnnotation.name().isEmpty()) {
+                return columnAnnotation.name();
+            }
         }
         return field.getName().toLowerCase();
     }
