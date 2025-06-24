@@ -1,19 +1,31 @@
 package com.persistence.db;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DbConnection {
-    private static final String db_url = "jdbc:postgresql://localhost:5432/framework_db";
-    private static final String db_user = "user";
-    private static final String db_password = "pass";
     private static DbConnection instance;
     private Connection connection;
 
     private DbConnection() {
         try {
-            Class.forName("org.postgresql.Driver");
-            this.connection = DriverManager.getConnection(db_url, db_user, db_password);
+            // Carregar propriedades do arquivo application.properties
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("src/main/resources/application.properties"));
+
+            String dbUrl = properties.getProperty("db.url");
+            String dbUser = properties.getProperty("db.user");
+            String dbPassword = properties.getProperty("db.password");
+            String dbDriver = properties.getProperty("db.driver");
+
+            // Inicializar conexão com o banco de dados
+            Class.forName(dbDriver);
+            this.connection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        } catch (IOException e) {
+            throw new RuntimeException("Error loading database properties", e);
         } catch (Exception e) {
             throw new RuntimeException("Error connecting to the database", e);
         }
